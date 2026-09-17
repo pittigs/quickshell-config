@@ -3,4 +3,6 @@ LauncherButton 1.0 LauncherButton.qml
 ClockWidget 1.0 ClockWidget.qml
 MediaWidget 1.0 MediaWidget.qml
 VolumeWidget 1.0 VolumeWidget.qml
+MicWidget 1.0 MicWidget.qml
+TrayWidget 1.0 TrayWidget.qml
 SysInfoWidget 1.0 SysInfoWidget.qml

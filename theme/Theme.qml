@@ -33,6 +33,7 @@ QtObject {
 
     // Typography & Metrics
     readonly property string fontFamily: "Inter"
+    readonly property string iconFontFamily: "Symbols Nerd Font"
     readonly property int radiusPill: 18
     readonly property int radiusCard: 14
     readonly property int radiusSm: 8

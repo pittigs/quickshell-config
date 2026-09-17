@@ -1,0 +1,13 @@
+[Unit]
+Description=Quickshell Desktop Status Bar
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/quickshell
+Restart=always
+RestartSec=2
+Environment=QT_QUICK_CONTROLS_STYLE=Basic
+
+[Install]
+WantedBy=graphical-session.target

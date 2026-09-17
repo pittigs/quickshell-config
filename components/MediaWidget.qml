@@ -33,7 +33,7 @@ Pill {
 
         Text {
             text: root.isPlaying ? "󰎈" : "󰎊"
-            font.family: Theme.fontFamily
+            font.family: Theme.iconFontFamily
             font.pixelSize: 14
             color: root.isPlaying ? Theme.green : Theme.overlay
 
@@ -69,7 +69,7 @@ Pill {
                 Text {
                     anchors.centerIn: parent
                     text: "󰒮"
-                    font.family: Theme.fontFamily
+                    font.family: Theme.iconFontFamily
                     font.pixelSize: 11
                     color: Theme.subtext
                 }
@@ -97,7 +97,7 @@ Pill {
                 Text {
                     anchors.centerIn: parent
                     text: root.isPlaying ? "󰏤" : "󰐊"
-                    font.family: Theme.fontFamily
+                    font.family: Theme.iconFontFamily
                     font.pixelSize: 12
                     color: playMouse.containsMouse ? Theme.crust : Theme.text
                 }
@@ -125,7 +125,7 @@ Pill {
                 Text {
                     anchors.centerIn: parent
                     text: "󰒭"
-                    font.family: Theme.fontFamily
+                    font.family: Theme.iconFontFamily
                     font.pixelSize: 11
                     color: Theme.subtext
                 }

@@ -32,7 +32,7 @@ Pill {
 
         Text {
             text: ""
-            font.family: Theme.fontFamily
+            font.family: Theme.iconFontFamily
             font.pixelSize: 13
             color: root.hovered ? Theme.mauve : Theme.blue
 

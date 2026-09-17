@@ -10,38 +10,33 @@ Pill {
     implicitHeight: 34
     implicitWidth: layout.implicitWidth + 24
 
-    readonly property var sink: Pipewire.defaultAudioSink
-    readonly property bool hasAudio: Boolean(sink && sink.audio)
-    readonly property bool isMuted: hasAudio ? sink.audio.muted : false
-    readonly property real volume: hasAudio ? sink.audio.volume : 0.0
+    readonly property var source: Pipewire.defaultAudioSource
+    readonly property bool hasAudio: Boolean(source && source.audio)
+    readonly property bool isMuted: hasAudio ? source.audio.muted : false
+    readonly property real volume: hasAudio ? source.audio.volume : 0.0
     readonly property int volumePercent: Math.round(root.volume * 100)
 
     PwObjectTracker {
-        objects: root.sink ? [root.sink] : []
+        objects: root.source ? [root.source] : []
     }
 
-    readonly property string icon: {
-        if (!root.hasAudio || root.isMuted || root.volumePercent === 0) return "󰝟"
-        if (root.volumePercent > 60) return "󰕾"
-        if (root.volumePercent > 25) return "󰖀"
-        return "󰕿"
-    }
+    readonly property string icon: (!root.hasAudio || root.isMuted) ? "󰍭" : "󰍬"
 
     onClicked: {
         if (root.hasAudio) {
-            root.sink.audio.muted = !root.sink.audio.muted
+            root.source.audio.muted = !root.source.audio.muted
         }
     }
 
     onWheelUp: {
         if (root.hasAudio) {
-            root.sink.audio.volume = Math.min(1.5, root.sink.audio.volume + 0.03)
+            root.source.audio.volume = Math.min(1.5, root.source.audio.volume + 0.03)
         }
     }
 
     onWheelDown: {
         if (root.hasAudio) {
-            root.sink.audio.volume = Math.max(0.0, root.sink.audio.volume - 0.03)
+            root.source.audio.volume = Math.max(0.0, root.source.audio.volume - 0.03)
         }
     }
 
@@ -57,7 +52,7 @@ Pill {
             color: {
                 if (root.isMuted) return Theme.red
                 if (root.hovered) return Theme.mauve
-                return Theme.blue
+                return Theme.green
             }
 
             Behavior on color {
@@ -66,7 +61,7 @@ Pill {
         }
 
         Text {
-            text: root.isMuted ? "Stumm" : (root.volumePercent + "%")
+            text: root.isMuted ? "Mute" : (root.volumePercent + "%")
             font.family: Theme.fontFamily
             font.pixelSize: 12
             font.weight: Font.Medium

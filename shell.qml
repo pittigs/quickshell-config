@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
@@ -8,70 +9,81 @@ import "components"
 ShellRoot {
     id: root
 
-    PanelWindow {
-        id: barWindow
+    Variants {
+        model: Quickshell.screens
 
-        // Floating pill bar anchored to top with margins
-        anchors {
-            top: true
-            left: true
-            right: true
-        }
-        margins {
-            top: 8
-            left: 14
-            right: 14
-        }
-        implicitHeight: 46
-        color: "transparent"
+        delegate: Component {
+            PanelWindow {
+                id: barWindow
 
-        // Place on top layer in Wayland
-        WlrLayershell.layer: WlrLayer.Top
+                required property var modelData
+                screen: modelData
 
-        // Glassmorphic Floating Island Container
-        Rectangle {
-            id: barContainer
-            anchors.fill: parent
-            radius: 23
-            color: Theme.glassBg
-            border.color: Theme.glassBorder
-            border.width: 1
-
-            // Subtle drop-shadow simulation with gradient/border
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
+                // Floating pill bar anchored to top with margins
+                anchors {
+                    top: true
+                    left: true
+                    right: true
+                }
+                margins {
+                    top: 8
+                    left: 14
+                    right: 14
+                }
+                implicitHeight: 46
                 color: "transparent"
-                border.color: "#10ffffff"
-                border.width: 1
-                anchors.margins: 1
-            }
 
-            // Left Section: Launcher & System Stats
-            RowLayout {
-                anchors.left: parent.left
-                anchors.leftMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                // Place on top layer in Wayland
+                WlrLayershell.layer: WlrLayer.Top
 
-                LauncherButton {}
-                SysInfoWidget {}
-            }
+                // Glassmorphic Floating Island Container
+                Rectangle {
+                    id: barContainer
+                    anchors.fill: parent
+                    radius: 23
+                    color: Theme.glassBg
+                    border.color: Theme.glassBorder
+                    border.width: 1
 
-            // Center Section: Clock & Date
-            ClockWidget {
-                anchors.centerIn: parent
-            }
+                    // Subtle drop-shadow simulation with gradient/border
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: "transparent"
+                        border.color: "#10ffffff"
+                        border.width: 1
+                        anchors.margins: 1
+                    }
 
-            // Right Section: Media Player & Volume
-            RowLayout {
-                anchors.right: parent.right
-                anchors.rightMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                    // Left Section: Launcher & System Stats (CPU, RAM, RTX 5080)
+                    RowLayout {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
 
-                MediaWidget {}
-                VolumeWidget {}
+                        LauncherButton {}
+                        SysInfoWidget {}
+                    }
+
+                    // Center Section: Clock & Date
+                    ClockWidget {
+                        anchors.centerIn: parent
+                    }
+
+                    // Right Section: Media Player, Tray, Mic & Volume
+                    RowLayout {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8
+
+                        MediaWidget {}
+                        TrayWidget {}
+                        MicWidget {}
+                        VolumeWidget {}
+                    }
+                }
             }
         }
     }
