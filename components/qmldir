@@ -6,3 +6,7 @@ VolumeWidget 1.0 VolumeWidget.qml
 MicWidget 1.0 MicWidget.qml
 TrayWidget 1.0 TrayWidget.qml
 SysInfoWidget 1.0 SysInfoWidget.qml
+AudioQuickSelect 1.0 AudioQuickSelect.qml
+PowerButton 1.0 PowerButton.qml
+PowerMenu 1.0 PowerMenu.qml
+ClockPopup 1.0 ClockPopup.qml

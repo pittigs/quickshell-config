@@ -9,6 +9,7 @@ Pill {
     clickable: true
     implicitHeight: 34
     implicitWidth: layout.implicitWidth + 24
+    property var parentWindow: null
 
     readonly property var source: Pipewire.defaultAudioSource
     readonly property bool hasAudio: Boolean(source && source.audio)
@@ -24,7 +25,13 @@ Pill {
 
     onClicked: {
         if (root.hasAudio) {
-            root.source.audio.muted = !root.source.audio.muted
+            root.source.audio.muted = !root.source.audio.muted;
+        }
+    }
+
+    onRightClicked: {
+        if (root.hasAudio) {
+            root.source.audio.muted = !root.source.audio.muted;
         }
     }
 

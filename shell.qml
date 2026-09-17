@@ -55,20 +55,21 @@ ShellRoot {
                         anchors.margins: 1
                     }
 
-                    // Left Section: Launcher & System Stats (CPU, RAM, RTX 5080)
+                    // Left Section: Power & System Stats (CPU, RAM, RTX 5080)
                     RowLayout {
                         anchors.left: parent.left
                         anchors.leftMargin: 8
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
 
-                        LauncherButton {}
+                        PowerButton { parentWindow: barWindow }
                         SysInfoWidget {}
                     }
 
                     // Center Section: Clock & Date
                     ClockWidget {
                         anchors.centerIn: parent
+                        parentWindow: barWindow
                     }
 
                     // Right Section: Media Player, Tray, Mic & Volume
@@ -79,9 +80,9 @@ ShellRoot {
                         spacing: 8
 
                         MediaWidget {}
-                        TrayWidget {}
-                        MicWidget {}
-                        VolumeWidget {}
+                        TrayWidget { parentWindow: barWindow }
+                        MicWidget { parentWindow: barWindow }
+                        VolumeWidget { parentWindow: barWindow }
                     }
                 }
             }

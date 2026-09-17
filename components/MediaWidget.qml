@@ -8,6 +8,7 @@ Pill {
 
     implicitHeight: 34
     implicitWidth: layout.implicitWidth + 20
+    visible: root.hasMedia
 
     // Pick active player (playing first, otherwise first available)
     readonly property var activePlayer: {
