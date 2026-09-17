@@ -10,3 +10,4 @@ AudioQuickSelect 1.0 AudioQuickSelect.qml
 PowerButton 1.0 PowerButton.qml
 PowerMenu 1.0 PowerMenu.qml
 ClockPopup 1.0 ClockPopup.qml
+PerformancePopup 1.0 PerformancePopup.qml

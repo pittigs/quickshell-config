@@ -63,7 +63,7 @@ ShellRoot {
                         spacing: 8
 
                         PowerButton { parentWindow: barWindow }
-                        SysInfoWidget {}
+                        SysInfoWidget { parentWindow: barWindow }
                     }
 
                     // Center Section: Clock & Date

@@ -1,1 +1,2 @@
 singleton PomodoroService 1.0 PomodoroService.qml
+singleton PowerProfileService 1.0 PowerProfileService.qml
