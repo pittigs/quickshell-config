@@ -1,0 +1,9 @@
+# Logs
+*.log
+*.qslog
+
+# Temp / Cache
+.cache/
+tmp/
+*.swp
+*~
