@@ -73,6 +73,7 @@ Pill {
                             }
                         } else {
                             if (itemDelegate.modelData.id === "steam") {
+                                if (steamOpenProc.running) steamOpenProc.running = false;
                                 steamOpenProc.running = true;
                             } else if (itemDelegate.modelData.onlyMenu) {
                                 if (itemDelegate.modelData.menu) {

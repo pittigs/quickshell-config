@@ -22,7 +22,7 @@ PopupWindow {
     grabFocus: true
     visible: false
     color: "transparent"
-    implicitWidth: 320
+    implicitWidth: 330
     implicitHeight: mainCard.implicitHeight
 
     // Track all nodes for live property updates
@@ -36,21 +36,63 @@ PopupWindow {
     }
 
     function setDefaultSink(id) {
+        if (wpctlProc.running) wpctlProc.running = false;
         wpctlProc.command = ["wpctl", "set-default", String(id)];
         wpctlProc.running = true;
     }
 
     function setDefaultSource(id) {
+        if (wpctlProc.running) wpctlProc.running = false;
         wpctlProc.command = ["wpctl", "set-default", String(id)];
         wpctlProc.running = true;
     }
 
+    function applyPreset(presetName) {
+        if (presetName === "gaming") {
+            for (let i = 0; i < sinks.length; i++) {
+                const desc = (sinks[i].description || "").toLowerCase();
+                if (desc.includes("inzone") || desc.includes("scarlett") || desc.includes("headphone")) {
+                    setDefaultSink(sinks[i].id);
+                    break;
+                }
+            }
+            for (let i = 0; i < sources.length; i++) {
+                const desc = (sources[i].description || "").toLowerCase();
+                if (desc.includes("mic") || desc.includes("scarlett") || desc.includes("inzone")) {
+                    setDefaultSource(sources[i].id);
+                    break;
+                }
+            }
+        } else if (presetName === "hifi") {
+            for (let i = 0; i < sinks.length; i++) {
+                const desc = (sinks[i].description || "").toLowerCase();
+                if (desc.includes("onkyo") || desc.includes("receiver") || desc.includes("schlafzimmer")) {
+                    setDefaultSink(sinks[i].id);
+                    break;
+                }
+            }
+        } else if (presetName === "desk") {
+            for (let i = 0; i < sinks.length; i++) {
+                const desc = (sinks[i].description || "").toLowerCase();
+                if (desc.includes("gb203") || desc.includes("dell") || desc.includes("hdmi")) {
+                    setDefaultSink(sinks[i].id);
+                    break;
+                }
+            }
+        }
+    }
+
+    // Active Sink (Audio Output)
     readonly property var activeSink: Pipewire.defaultAudioSink
     readonly property bool hasSinkAudio: Boolean(activeSink && activeSink.audio)
     readonly property real sinkVolume: hasSinkAudio ? activeSink.audio.volume : 0.0
     readonly property bool isSinkMuted: hasSinkAudio ? activeSink.audio.muted : false
 
+    // Active Source (Microphone Input)
     readonly property var activeSource: Pipewire.defaultAudioSource
+    readonly property bool hasSourceAudio: Boolean(activeSource && activeSource.audio)
+    readonly property real sourceVolume: hasSourceAudio ? activeSource.audio.volume : 0.0
+    readonly property bool isSourceMuted: hasSourceAudio ? activeSource.audio.muted : false
 
     // Filter available hardware sinks (audio outputs)
     readonly property var sinks: {
@@ -65,13 +107,16 @@ PopupWindow {
         return list;
     }
 
-    // Filter available hardware sources (microphones)
+    // Filter available hardware sources (microphones), excluding internal stream splits
     readonly property var sources: {
         const list = [];
         const nodes = Pipewire.nodes.values;
         for (let i = 0; i < nodes.length; i++) {
             const n = nodes[i];
             if (!n.isSink && !n.isStream && n.audio) {
+                if (n.name && (n.name.includes(".split") || n.name.includes(".hw_"))) {
+                    continue;
+                }
                 list.push(n);
             }
         }
@@ -93,10 +138,23 @@ PopupWindow {
 
     function cleanDeviceName(desc) {
         if (!desc) return "Unbekanntes Gerät";
-        return desc
+        let name = desc;
+        if (name.includes("GB203")) {
+            return "DELL S2721DGF (HDMI Audio)";
+        }
+        if (name.includes("800 Series Chipset") && name.includes("HDMI")) {
+            return "ASUS PB277 (HDMI Audio)";
+        }
+        if (name.includes("800 Series Chipset")) {
+            return "Onboard Audio (Mainboard)";
+        }
+        return name
             .replace(/\s*Analog Stereo\s*/i, "")
             .replace(/\s*Digital Stereo \(HDMI\)\s*/i, " (HDMI)")
             .replace(/\s*Headphones \/ Line 1-2\s*/i, " (Klinke)")
+            .replace(/\s*Input 1 Mic\s*/i, " (Mikrofon 1)")
+            .replace(/\s*Input 2 Inst\/Line\s*/i, " (Instrument 2)")
+            .replace(/\s*Mono\s*/i, " (Headset-Mic)")
             .trim();
     }
 
@@ -104,7 +162,7 @@ PopupWindow {
     Rectangle {
         id: mainCard
         anchors.fill: parent
-        implicitWidth: 320
+        implicitWidth: 330
         implicitHeight: contentCol.implicitHeight + 24
         radius: Theme.radiusCard
         color: "#f21e1e2e"
@@ -174,108 +232,126 @@ PopupWindow {
                 }
             }
 
-            // Volume Control Bar Container
-            Rectangle {
+            // Quick Scenario Presets Bar (Gaming, Hi-Fi, Desk)
+            RowLayout {
                 Layout.fillWidth: true
-                implicitHeight: 40
-                radius: 10
-                color: Theme.surface0
+                spacing: 6
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    spacing: 8
+                // 1. Gaming Preset
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 28
+                    radius: 8
+                    color: gamingMouse.containsMouse ? Theme.surface1 : Theme.surface0
 
-                    // Mute button icon
-                    Rectangle {
-                        implicitWidth: 24
-                        implicitHeight: 24
-                        radius: 12
-                        color: muteMouse.containsMouse ? Theme.surface1 : "transparent"
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 5
 
                         Text {
-                            anchors.centerIn: parent
-                            text: (popup.isSinkMuted || popup.sinkVolume === 0) ? "󰝟" : "󰕾"
+                            text: "󰊴"
                             font.family: Theme.iconFontFamily
-                            font.pixelSize: 14
-                            color: popup.isSinkMuted ? Theme.red : Theme.blue
+                            font.pixelSize: 12
+                            color: Theme.mauve
                         }
 
-                        MouseArea {
-                            id: muteMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (popup.hasSinkAudio) {
-                                    popup.activeSink.audio.muted = !popup.activeSink.audio.muted;
-                                }
-                            }
+                        Text {
+                            text: "Gaming"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            color: Theme.text
                         }
                     }
 
-                    // Interactive Volume Slider Bar
-                    Rectangle {
-                        id: sliderTrack
-                        Layout.fillWidth: true
-                        implicitHeight: 6
-                        radius: 3
-                        color: Theme.surface1
+                    MouseArea {
+                        id: gamingMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: popup.applyPreset("gaming")
+                    }
+                }
 
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            width: Math.max(0, Math.min(sliderTrack.width, (popup.sinkVolume / 1.5) * sliderTrack.width))
-                            radius: 3
-                            color: popup.isSinkMuted ? Theme.overlay : Theme.blue
+                // 2. Hi-Fi / Receiver Preset
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 28
+                    radius: 8
+                    color: hifiMouse.containsMouse ? Theme.surface1 : Theme.surface0
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 5
+
+                        Text {
+                            text: "󰓃"
+                            font.family: Theme.iconFontFamily
+                            font.pixelSize: 12
+                            color: Theme.peach
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            anchors.margins: -6
-                            cursorShape: Qt.PointingHandCursor
-
-                            function updateVolume(mouseX) {
-                                if (popup.hasSinkAudio) {
-                                    const clampedX = Math.max(0, Math.min(sliderTrack.width, mouseX - 6));
-                                    const fraction = clampedX / sliderTrack.width;
-                                    popup.activeSink.audio.volume = Math.round(fraction * 1.5 * 100) / 100;
-                                }
-                            }
-
-                            onClicked: (mouse) => updateVolume(mouse.x)
-                            onPositionChanged: (mouse) => {
-                                if (pressed) updateVolume(mouse.x);
-                            }
+                        Text {
+                            text: "Hi-Fi"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            color: Theme.text
                         }
                     }
 
-                    // Percentage Text
-                    Text {
-                        text: popup.isSinkMuted ? "Stumm" : (Math.round(popup.sinkVolume * 100) + "%")
-                        font.family: Theme.fontFamily
-                        font.pixelSize: 11
-                        font.weight: Font.Medium
-                        color: popup.isSinkMuted ? Theme.overlay : Theme.text
-                        Layout.preferredWidth: 38
-                        horizontalAlignment: Text.AlignRight
+                    MouseArea {
+                        id: hifiMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: popup.applyPreset("hifi")
+                    }
+                }
+
+                // 3. Desk / Monitor Preset
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 28
+                    radius: 8
+                    color: deskMouse.containsMouse ? Theme.surface1 : Theme.surface0
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 5
+
+                        Text {
+                            text: "󰡁"
+                            font.family: Theme.iconFontFamily
+                            font.pixelSize: 12
+                            color: Theme.blue
+                        }
+
+                        Text {
+                            text: "Monitor"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            color: Theme.text
+                        }
+                    }
+
+                    MouseArea {
+                        id: deskMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: popup.applyPreset("desk")
                     }
                 }
             }
 
-            // Divider Line
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: 1
-                color: "#15ffffff"
-            }
-
-            // Section 1: Output Sinks (Ausgabegeräte)
+            // ==========================================
+            // SECTION 1: OUTPUT (AUSGABE)
+            // ==========================================
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: 6
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -285,11 +361,11 @@ PopupWindow {
                         text: "󰕾"
                         font.family: Theme.iconFontFamily
                         font.pixelSize: 12
-                        color: Theme.subtext
+                        color: Theme.blue
                     }
 
                     Text {
-                        text: "Ausgabegeräte"
+                        text: "Audio-Ausgabe (Lautstärke)"
                         font.family: Theme.fontFamily
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
@@ -297,6 +373,98 @@ PopupWindow {
                     }
                 }
 
+                // Volume Control Bar Container
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 38
+                    radius: 10
+                    color: Theme.surface0
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        spacing: 8
+
+                        // Mute button icon
+                        Rectangle {
+                            implicitWidth: 24
+                            implicitHeight: 24
+                            radius: 12
+                            color: muteMouse.containsMouse ? Theme.surface1 : "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: (popup.isSinkMuted || popup.sinkVolume === 0) ? "󰝟" : "󰕾"
+                                font.family: Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: popup.isSinkMuted ? Theme.red : Theme.blue
+                            }
+
+                            MouseArea {
+                                id: muteMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (popup.hasSinkAudio) {
+                                        popup.activeSink.audio.muted = !popup.activeSink.audio.muted;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Interactive Volume Slider Bar
+                        Rectangle {
+                            id: sliderTrack
+                            Layout.fillWidth: true
+                            implicitHeight: 6
+                            radius: 3
+                            color: Theme.surface1
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: Math.max(0, Math.min(sliderTrack.width, (popup.sinkVolume / 1.5) * sliderTrack.width))
+                                radius: 3
+                                color: popup.isSinkMuted ? Theme.overlay : Theme.blue
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                anchors.margins: -6
+                                cursorShape: Qt.PointingHandCursor
+
+                                function updateVolume(mouseX) {
+                                    if (popup.hasSinkAudio) {
+                                        const clampedX = Math.max(0, Math.min(sliderTrack.width, mouseX - 6));
+                                        const fraction = clampedX / sliderTrack.width;
+                                        popup.activeSink.audio.volume = Math.round(fraction * 1.5 * 100) / 100;
+                                    }
+                                }
+
+                                onClicked: (mouse) => updateVolume(mouse.x)
+                                onPositionChanged: (mouse) => {
+                                    if (pressed) updateVolume(mouse.x);
+                                }
+                            }
+                        }
+
+                        // Percentage Text
+                        Text {
+                            text: popup.isSinkMuted ? "Stumm" : (Math.round(popup.sinkVolume * 100) + "%")
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: popup.isSinkMuted ? Theme.overlay : Theme.text
+                            Layout.preferredWidth: 38
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+                }
+
+                // Sinks list
                 Repeater {
                     model: popup.sinks
 
@@ -307,7 +475,7 @@ PopupWindow {
                         readonly property bool isSelected: Boolean(popup.activeSink && popup.activeSink.id === sinkItem.modelData.id)
 
                         Layout.fillWidth: true
-                        implicitHeight: 34
+                        implicitHeight: 32
                         radius: 8
                         color: {
                             if (isSelected) return Theme.surface0;
@@ -372,10 +540,12 @@ PopupWindow {
                 color: "#15ffffff"
             }
 
-            // Section 2: Input Sources (Eingabegeräte / Mikrofone)
+            // ==========================================
+            // SECTION 2: INPUT (MIKROFONE)
+            // ==========================================
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: 6
 
                 RowLayout {
                     Layout.fillWidth: true
@@ -385,11 +555,11 @@ PopupWindow {
                         text: "󰍬"
                         font.family: Theme.iconFontFamily
                         font.pixelSize: 12
-                        color: Theme.subtext
+                        color: Theme.green
                     }
 
                     Text {
-                        text: "Eingabegeräte (Mikrofone)"
+                        text: "Eingabegeräte (Mikrofone & Pegel)"
                         font.family: Theme.fontFamily
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
@@ -397,6 +567,98 @@ PopupWindow {
                     }
                 }
 
+                // Microphone Gain Control Bar Container
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 38
+                    radius: 10
+                    color: Theme.surface0
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        spacing: 8
+
+                        // Mic mute button icon
+                        Rectangle {
+                            implicitWidth: 24
+                            implicitHeight: 24
+                            radius: 12
+                            color: micMuteMouse.containsMouse ? Theme.surface1 : "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: (popup.isSourceMuted || popup.sourceVolume === 0) ? "󰍭" : "󰍬"
+                                font.family: Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: popup.isSourceMuted ? Theme.red : Theme.green
+                            }
+
+                            MouseArea {
+                                id: micMuteMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (popup.hasSourceAudio) {
+                                        popup.activeSource.audio.muted = !popup.activeSource.audio.muted;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Interactive Mic Gain Slider Bar
+                        Rectangle {
+                            id: micSliderTrack
+                            Layout.fillWidth: true
+                            implicitHeight: 6
+                            radius: 3
+                            color: Theme.surface1
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: Math.max(0, Math.min(micSliderTrack.width, (popup.sourceVolume / 1.0) * micSliderTrack.width))
+                                radius: 3
+                                color: popup.isSourceMuted ? Theme.overlay : Theme.green
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                anchors.margins: -6
+                                cursorShape: Qt.PointingHandCursor
+
+                                function updateMicVolume(mouseX) {
+                                    if (popup.hasSourceAudio) {
+                                        const clampedX = Math.max(0, Math.min(micSliderTrack.width, mouseX - 6));
+                                        const fraction = clampedX / micSliderTrack.width;
+                                        popup.activeSource.audio.volume = Math.round(fraction * 1.0 * 100) / 100;
+                                    }
+                                }
+
+                                onClicked: (mouse) => updateMicVolume(mouse.x)
+                                onPositionChanged: (mouse) => {
+                                    if (pressed) updateMicVolume(mouse.x);
+                                }
+                            }
+                        }
+
+                        // Percentage Text
+                        Text {
+                            text: popup.isSourceMuted ? "Stumm" : (Math.round(popup.sourceVolume * 100) + "%")
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: popup.isSourceMuted ? Theme.overlay : Theme.text
+                            Layout.preferredWidth: 38
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+                }
+
+                // Sources list
                 Repeater {
                     model: popup.sources
 
@@ -407,7 +669,7 @@ PopupWindow {
                         readonly property bool isSelected: Boolean(popup.activeSource && popup.activeSource.id === sourceItem.modelData.id)
 
                         Layout.fillWidth: true
-                        implicitHeight: 34
+                        implicitHeight: 32
                         radius: 8
                         color: {
                             if (isSelected) return Theme.surface0;

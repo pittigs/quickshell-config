@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
 import Quickshell.Services.UPower
 import "../theme"
 import "../services"
@@ -15,20 +14,22 @@ Pill {
     implicitWidth: layout.implicitWidth + 24
     active: perfPopup.visible
 
-    property string cpuPercent: "..."
-    property real cpuFraction: 0.0
-    property string ramPercent: "..."
-    property real ramFraction: 0.0
-    property string ramUsedGB: "0.0"
-    property string ramTotalGB: "64.0"
+    // Hardware stats mapped directly from central SysInfoService
+    readonly property string cpuPercent: SysInfoService.cpuPercent
+    readonly property real cpuFraction: SysInfoService.cpuFraction
+    readonly property string cpuTemp: SysInfoService.cpuTemp
+    readonly property string ramPercent: SysInfoService.ramPercent
+    readonly property real ramFraction: SysInfoService.ramFraction
+    readonly property string ramUsedGB: SysInfoService.ramUsedGB
+    readonly property string ramTotalGB: SysInfoService.ramTotalGB
 
-    property string gpuTemp: ""
-    property string gpuPercent: ""
-    property real gpuFraction: 0.0
-    property string vramUsedGB: "0.0"
-    property string vramTotalGB: "16.0"
-    property string gpuPowerW: "0 W"
-    readonly property bool hasGpu: gpuTemp !== "" && gpuTemp !== "0°C"
+    readonly property string gpuTemp: SysInfoService.gpuTemp
+    readonly property string gpuPercent: SysInfoService.gpuPercent
+    readonly property real gpuFraction: SysInfoService.gpuFraction
+    readonly property string vramUsedGB: SysInfoService.vramUsedGB
+    readonly property string vramTotalGB: SysInfoService.vramTotalGB
+    readonly property string gpuPowerW: SysInfoService.gpuPowerW
+    readonly property bool hasGpu: SysInfoService.hasGpu
 
     readonly property var battery: UPower.displayDevice
     readonly property bool hasBattery: Boolean(battery && battery.isRechargeable)
@@ -47,19 +48,6 @@ Pill {
         id: perfPopup
         anchorItem: root
         anchorWindow: root.parentWindow
-
-        cpuPct: root.cpuPercent
-        cpuFraction: root.cpuFraction
-        ramPct: root.ramPercent
-        ramFraction: root.ramFraction
-        ramUsedGB: root.ramUsedGB
-        ramTotalGB: root.ramTotalGB
-        gpuTemp: root.gpuTemp
-        gpuPct: root.gpuPercent
-        gpuFraction: root.gpuFraction
-        vramUsedGB: root.vramUsedGB
-        vramTotalGB: root.vramTotalGB
-        gpuPowerW: root.gpuPowerW
     }
 
     onClicked: {
@@ -76,78 +64,6 @@ Pill {
 
     onWheelDown: {
         PowerProfileService.cyclePrev();
-    }
-
-    // Process to read CPU, RAM and RTX 5080 GPU stats
-    Process {
-        id: sysProc
-        command: [
-            "sh", "-c",
-            "read -r cpu u n s i w irq sirq st g gn < /proc/stat; " +
-            "idle1=$((i + w)); total1=$((u + n + s + i + w + irq + sirq + st)); " +
-            "sleep 0.12; " +
-            "read -r cpu u n s i w irq sirq st g gn < /proc/stat; " +
-            "idle2=$((i + w)); total2=$((u + n + s + i + w + irq + sirq + st)); " +
-            "cpu_pct=$(( (100 * ( (total2 - total1) - (idle2 - idle1) )) / (total2 - total1) )); " +
-            "ram_info=$(free -m | awk '/Mem:/ { printf(\"%d:%d:%d\", ($3/$2)*100, $3, $2) }'); " +
-            "gpu_info=$(nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw --format=csv,noheader,nounits 2>/dev/null || echo '0,0,0,0,0'); " +
-            "echo \"$cpu_pct|$ram_info|$gpu_info\""
-        ]
-        running: true
-
-        stdout: StdioCollector {
-            onTextChanged: {
-                if (text && text.trim().length > 0) {
-                    const sections = text.trim().split("|");
-                    if (sections.length >= 3) {
-                        // CPU
-                        const cVal = parseInt(sections[0]) || 0;
-                        root.cpuPercent = cVal + "%";
-                        root.cpuFraction = Math.max(0, Math.min(1, cVal / 100));
-
-                        // RAM
-                        const rParts = sections[1].split(":");
-                        if (rParts.length >= 3) {
-                            const rPct = parseInt(rParts[0]) || 0;
-                            const rUsed = parseInt(rParts[1]) || 0;
-                            const rTot = parseInt(rParts[2]) || 1;
-                            root.ramPercent = rPct + "%";
-                            root.ramFraction = Math.max(0, Math.min(1, rPct / 100));
-                            root.ramUsedGB = (rUsed / 1024).toFixed(1);
-                            root.ramTotalGB = (rTot / 1024).toFixed(1);
-                        }
-
-                        // GPU
-                        const gParts = sections[2].split(",");
-                        if (gParts.length >= 5) {
-                            const gTemp = gParts[0].trim();
-                            const gUtil = parseInt(gParts[1].trim()) || 0;
-                            const vUsed = parseInt(gParts[2].trim()) || 0;
-                            const vTot = parseInt(gParts[3].trim()) || 1;
-                            const gPow = parseFloat(gParts[4].trim()) || 0;
-
-                            if (gTemp && gTemp !== "0") {
-                                root.gpuTemp = gTemp + "°C";
-                                root.gpuPercent = gUtil + "%";
-                                root.gpuFraction = Math.max(0, Math.min(1, gUtil / 100));
-                                root.vramUsedGB = (vUsed / 1024).toFixed(1);
-                                root.vramTotalGB = (vTot / 1024).toFixed(1);
-                                root.gpuPowerW = Math.round(gPow) + " W";
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        onTriggered: {
-            sysProc.running = true;
-        }
     }
 
     RowLayout {
@@ -175,7 +91,7 @@ Pill {
             color: Theme.surface1
         }
 
-        // CPU
+        // CPU (Load & Package Temperature)
         RowLayout {
             spacing: 5
 
@@ -187,7 +103,7 @@ Pill {
             }
 
             Text {
-                text: root.cpuPercent
+                text: root.cpuTemp ? (root.cpuPercent + " • " + root.cpuTemp) : root.cpuPercent
                 font.family: Theme.fontFamily
                 font.pixelSize: 12
                 font.weight: Font.Medium

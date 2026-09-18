@@ -10,7 +10,7 @@ Pill {
     implicitWidth: layout.implicitWidth + 20
     visible: root.hasMedia
 
-    // Pick active player (playing first, otherwise first available)
+    // Pick active player (playing first, otherwise first available with valid track title)
     readonly property var activePlayer: {
         const players = Mpris.players.values;
         if (!players || players.length === 0) return null;
@@ -19,27 +19,53 @@ Pill {
                 return players[i];
             }
         }
-        return players[0];
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].trackTitle && players[i].trackTitle.trim().length > 0) {
+                return players[i];
+            }
+        }
+        return null;
     }
 
-    readonly property bool hasMedia: activePlayer !== null
+    readonly property bool hasMedia: activePlayer !== null && Boolean(activePlayer.trackTitle && activePlayer.trackTitle.trim().length > 0)
     readonly property bool isPlaying: hasMedia && activePlayer.playbackState === MprisPlaybackState.Playing
     readonly property string title: hasMedia ? (activePlayer.trackTitle || "Unbekannter Titel") : "Keine Medien"
     readonly property string artist: hasMedia ? (activePlayer.trackArtist || "") : ""
+    readonly property string artUrl: hasMedia ? (activePlayer.trackArtUrl || "") : ""
 
     RowLayout {
         id: layout
         anchors.centerIn: parent
         spacing: 8
 
-        Text {
-            text: root.isPlaying ? "󰎈" : "󰎊"
-            font.family: Theme.iconFontFamily
-            font.pixelSize: 14
-            color: root.isPlaying ? Theme.green : Theme.overlay
+        // Icon or Album Art Thumbnail
+        Rectangle {
+            implicitWidth: 20
+            implicitHeight: 20
+            radius: 4
+            clip: true
+            color: "transparent"
 
-            Behavior on color {
-                ColorAnimation { duration: 150 }
+            Image {
+                id: albumArt
+                visible: root.artUrl !== "" && status === Image.Ready
+                anchors.fill: parent
+                source: root.artUrl
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+            }
+
+            Text {
+                visible: !albumArt.visible
+                anchors.centerIn: parent
+                text: root.isPlaying ? "󰎈" : "󰎊"
+                font.family: Theme.iconFontFamily
+                font.pixelSize: 14
+                color: root.isPlaying ? Theme.green : Theme.overlay
+
+                Behavior on color {
+                    ColorAnimation { duration: 150 }
+                }
             }
         }
 

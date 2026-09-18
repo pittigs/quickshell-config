@@ -9,6 +9,7 @@ Pill {
     clickable: true
     implicitHeight: 34
     implicitWidth: layout.implicitWidth + 24
+    active: audioPopup.visible
     property var parentWindow: null
 
     readonly property var source: Pipewire.defaultAudioSource
@@ -21,6 +22,12 @@ Pill {
         objects: root.source ? [root.source] : []
     }
 
+    AudioQuickSelect {
+        id: audioPopup
+        anchorItem: root
+        anchorWindow: root.parentWindow
+    }
+
     readonly property string icon: (!root.hasAudio || root.isMuted) ? "󰍭" : "󰍬"
 
     onClicked: {
@@ -30,27 +37,25 @@ Pill {
     }
 
     onRightClicked: {
-        if (root.hasAudio) {
-            root.source.audio.muted = !root.source.audio.muted;
-        }
+        audioPopup.visible = !audioPopup.visible;
     }
 
     onWheelUp: {
         if (root.hasAudio) {
-            root.source.audio.volume = Math.min(1.5, root.source.audio.volume + 0.03)
+            root.source.audio.volume = Math.min(1.0, root.source.audio.volume + 0.03);
         }
     }
 
     onWheelDown: {
         if (root.hasAudio) {
-            root.source.audio.volume = Math.max(0.0, root.source.audio.volume - 0.03)
+            root.source.audio.volume = Math.max(0.0, root.source.audio.volume - 0.03);
         }
     }
 
     RowLayout {
         id: layout
         anchors.centerIn: parent
-        spacing: 7
+        spacing: 6
 
         Text {
             text: root.icon
@@ -58,7 +63,7 @@ Pill {
             font.pixelSize: 14
             color: {
                 if (root.isMuted) return Theme.red
-                if (root.hovered) return Theme.mauve
+                if (root.hovered || audioPopup.visible) return Theme.mauve
                 return Theme.green
             }
 
@@ -73,6 +78,18 @@ Pill {
             font.pixelSize: 12
             font.weight: Font.Medium
             color: root.isMuted ? Theme.overlay : Theme.text
+        }
+
+        Text {
+            text: "󰅀"
+            font.family: Theme.iconFontFamily
+            font.pixelSize: 10
+            color: audioPopup.visible ? Theme.green : Theme.overlay
+            opacity: root.hovered || audioPopup.visible ? 1.0 : 0.6
+
+            Behavior on opacity {
+                NumberAnimation { duration: 150 }
+            }
         }
     }
 }

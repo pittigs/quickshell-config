@@ -30,6 +30,7 @@ PopupWindow {
 
     // Calendar state
     property var today: new Date()
+    property var selectedDate: new Date()
     property int displayYear: today.getFullYear()
     property int displayMonth: today.getMonth() // 0-indexed
 
@@ -55,6 +56,7 @@ PopupWindow {
         today = new Date();
         displayYear = today.getFullYear();
         displayMonth = today.getMonth();
+        selectedDate = new Date();
     }
 
     readonly property var monthNames: [
@@ -677,24 +679,43 @@ PopupWindow {
                         model: popup.calendarGrid
 
                         delegate: Rectangle {
+                            id: dayDelegate
+                            required property var modelData
+
+                            readonly property bool isSelected: Boolean(
+                                popup.selectedDate &&
+                                modelData.isCurrentMonth &&
+                                popup.selectedDate.getDate() === modelData.day &&
+                                popup.selectedDate.getMonth() === popup.displayMonth &&
+                                popup.selectedDate.getFullYear() === popup.displayYear
+                            )
+
                             Layout.fillWidth: true
                             implicitHeight: 32
                             radius: 16
-                            color: modelData.isToday 
-                                ? Theme.blue 
-                                : (dayMouse.containsMouse ? Theme.surface1 : "transparent")
+                            color: {
+                                if (modelData.isToday) return Theme.blue;
+                                if (isSelected) return Theme.surface1;
+                                if (dayMouse.containsMouse) return Theme.surface0;
+                                return "transparent";
+                            }
+                            border.color: isSelected && !modelData.isToday ? Theme.blue : "transparent"
+                            border.width: 1.5
 
                             Behavior on color { ColorAnimation { duration: 100 } }
+                            Behavior on border.color { ColorAnimation { duration: 100 } }
 
                             Text {
                                 anchors.centerIn: parent
                                 text: String(modelData.day)
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 12
-                                font.weight: modelData.isToday ? Font.Bold : (modelData.isCurrentMonth ? Font.Medium : Font.Normal)
-                                color: modelData.isToday 
-                                    ? Theme.crust 
-                                    : (modelData.isCurrentMonth ? Theme.text : Theme.surface2)
+                                font.weight: (modelData.isToday || isSelected) ? Font.Bold : (modelData.isCurrentMonth ? Font.Medium : Font.Normal)
+                                color: {
+                                    if (modelData.isToday) return Theme.crust;
+                                    if (isSelected) return Theme.blue;
+                                    return modelData.isCurrentMonth ? Theme.text : Theme.surface2;
+                                }
                             }
 
                             MouseArea {
@@ -702,7 +723,40 @@ PopupWindow {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (modelData.isCurrentMonth) {
+                                        popup.selectedDate = new Date(popup.displayYear, popup.displayMonth, modelData.day);
+                                    }
+                                }
                             }
+                        }
+                    }
+                }
+
+                // Selected Day Status Banner
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 34
+                    radius: 8
+                    color: Theme.surface0
+
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        Text {
+                            text: "󰃭"
+                            font.family: Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: Theme.blue
+                        }
+
+                        Text {
+                            text: Qt.formatDate(popup.selectedDate, "dddd, dd. MMMM yyyy")
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: Theme.text
                         }
                     }
                 }

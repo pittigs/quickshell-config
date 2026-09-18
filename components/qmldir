@@ -11,3 +11,11 @@ PowerButton 1.0 PowerButton.qml
 PowerMenu 1.0 PowerMenu.qml
 ClockPopup 1.0 ClockPopup.qml
 PerformancePopup 1.0 PerformancePopup.qml
+NetworkPopup 1.0 NetworkPopup.qml
+NetworkWidget 1.0 NetworkWidget.qml
+WeatherPopup 1.0 WeatherPopup.qml
+WeatherWidget 1.0 WeatherWidget.qml
+QuickSettingsPopup 1.0 QuickSettingsPopup.qml
+QuickSettingsWidget 1.0 QuickSettingsWidget.qml
+NotesPopup 1.0 NotesPopup.qml
+NotesWidget 1.0 NotesWidget.qml

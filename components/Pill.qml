@@ -13,6 +13,7 @@ Rectangle {
 
     signal clicked()
     signal rightClicked()
+    signal middleClicked()
     signal wheelUp()
     signal wheelDown()
 
@@ -41,13 +42,15 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: root.hoverable
         cursorShape: root.clickable ? Qt.PointingHandCursor : Qt.ArrowCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
         onClicked: (mouse) => {
             if (mouse.button === Qt.LeftButton) {
                 root.clicked()
             } else if (mouse.button === Qt.RightButton) {
                 root.rightClicked()
+            } else if (mouse.button === Qt.MiddleButton) {
+                root.middleClicked()
             }
         }
 

@@ -39,6 +39,10 @@ Pill {
         PomodoroService.toggle();
     }
 
+    onMiddleClicked: {
+        root.showDetails = !root.showDetails;
+    }
+
     RowLayout {
         id: contentLayout
         anchors.centerIn: parent

@@ -11,19 +11,20 @@ PopupWindow {
     property var anchorItem: null
     property var anchorWindow: null
 
-    // Hardware stats passed from SysInfoWidget
-    property string cpuPct: "0%"
-    property real cpuFraction: 0.0
-    property string ramPct: "0%"
-    property real ramFraction: 0.0
-    property string ramUsedGB: "0.0"
-    property string ramTotalGB: "64.0"
-    property string gpuTemp: "0°C"
-    property string gpuPct: "0%"
-    property real gpuFraction: 0.0
-    property string vramUsedGB: "0.0"
-    property string vramTotalGB: "16.0"
-    property string gpuPowerW: "0 W"
+    // Hardware stats mapped from SysInfoService
+    readonly property string cpuPct: SysInfoService.cpuPercent
+    readonly property real cpuFraction: SysInfoService.cpuFraction
+    readonly property string cpuTemp: SysInfoService.cpuTemp
+    readonly property string ramPct: SysInfoService.ramPercent
+    readonly property real ramFraction: SysInfoService.ramFraction
+    readonly property string ramUsedGB: SysInfoService.ramUsedGB
+    readonly property string ramTotalGB: SysInfoService.ramTotalGB
+    readonly property string gpuTemp: SysInfoService.gpuTemp
+    readonly property string gpuPct: SysInfoService.gpuPercent
+    readonly property real gpuFraction: SysInfoService.gpuFraction
+    readonly property string vramUsedGB: SysInfoService.vramUsedGB
+    readonly property string vramTotalGB: SysInfoService.vramTotalGB
+    readonly property string gpuPowerW: SysInfoService.gpuPowerW
 
     anchor {
         window: popup.anchorWindow
@@ -339,7 +340,7 @@ PopupWindow {
                         Item { Layout.fillWidth: true }
 
                         Text {
-                            text: popup.cpuPct
+                            text: popup.cpuTemp ? (popup.cpuPct + " • " + popup.cpuTemp) : popup.cpuPct
                             font.family: Theme.fontFamily
                             font.pixelSize: 12
                             font.weight: Font.Bold
@@ -435,14 +436,14 @@ PopupWindow {
             // GPU Stat Card (RTX 5080)
             Rectangle {
                 Layout.fillWidth: true
-                implicitHeight: 64
+                implicitHeight: 74
                 radius: 10
                 color: Theme.surface0
 
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 9
-                    spacing: 4
+                    spacing: 5
 
                     RowLayout {
                         Layout.fillWidth: true
@@ -472,6 +473,25 @@ PopupWindow {
                             font.pixelSize: 11
                             font.weight: Font.Bold
                             color: Theme.green
+                        }
+                    }
+
+                    // GPU Utilization Progress bar
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: 5
+                        radius: 2.5
+                        color: Theme.surface1
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: parent.width * popup.gpuFraction
+                            radius: 2.5
+                            color: Theme.green
+
+                            Behavior on width { NumberAnimation { duration: 200 } }
                         }
                     }
 
