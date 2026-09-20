@@ -206,7 +206,7 @@ PopupWindow {
                         spacing: 8
 
                         Text {
-                            text: "󰕓"
+                            text: "󰁅"
                             font.family: Theme.iconFontFamily
                             font.pixelSize: 14
                             color: Theme.blue
@@ -232,7 +232,7 @@ PopupWindow {
                         spacing: 8
 
                         Text {
-                            text: "󰕒"
+                            text: "󰁝"
                             font.family: Theme.iconFontFamily
                             font.pixelSize: 14
                             color: Theme.green
