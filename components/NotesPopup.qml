@@ -28,9 +28,11 @@ PopupWindow {
     property bool isLoaded: false
     property bool copiedFeedback: false
 
+    readonly property string notesFilePath: (Quickshell.env("HOME") || "/home/bas_pit") + "/.config/quickshell/scratchpad_notes.txt"
+
     Process {
         id: loadProc
-        command: ["cat", "/home/bas_pit/.config/quickshell/scratchpad_notes.txt"]
+        command: ["sh", "-c", "cat \"$HOME/.config/quickshell/scratchpad_notes.txt\" 2>/dev/null || touch \"$HOME/.config/quickshell/scratchpad_notes.txt\""]
         running: true
 
         stdout: StdioCollector {
@@ -53,7 +55,9 @@ PopupWindow {
         const b64 = Qt.btoa(encodeURIComponent(noteArea.text));
         saveProc.command = [
             "python3", "-c",
-            "import sys, base64, urllib.parse; open('/home/bas_pit/.config/quickshell/scratchpad_notes.txt', 'w', encoding='utf-8').write(urllib.parse.unquote(base64.b64decode('" + b64 + "').decode('utf-8')))"
+            "import sys, base64, urllib.parse; open(sys.argv[1], 'w', encoding='utf-8').write(urllib.parse.unquote(base64.b64decode(sys.argv[2]).decode('utf-8')))",
+            popup.notesFilePath,
+            b64
         ];
         saveProc.running = true;
     }

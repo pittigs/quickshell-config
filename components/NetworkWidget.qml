@@ -45,7 +45,7 @@ Pill {
             text: {
                 if (!NetworkService.isOnline) return "Offline";
                 if (NetworkService.downBytesSec > 50 * 1024) {
-                    return "󰕒 " + NetworkService.downSpeedStr;
+                    return "󰕓 " + NetworkService.downSpeedStr;
                 }
                 return NetworkService.isWifi ? "WLAN" : "LAN";
             }

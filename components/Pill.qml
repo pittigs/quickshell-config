@@ -30,6 +30,11 @@ Rectangle {
     }
     border.width: 1
 
+    scale: (clickable && mouseArea.pressed) ? 0.96 : 1.0
+    Behavior on scale {
+        NumberAnimation { duration: 100; easing.type: Easing.OutQuad }
+    }
+
     Behavior on color {
         ColorAnimation { duration: 150; easing.type: Easing.OutQuad }
     }

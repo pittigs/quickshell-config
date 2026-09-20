@@ -9,6 +9,7 @@ Pill {
     implicitHeight: 34
     implicitWidth: layout.implicitWidth + 20
     visible: root.hasMedia
+    customBorder: root.isPlaying ? Theme.surface2 : Theme.glassBorder
 
     // Pick active player (playing first, otherwise first available with valid track title)
     readonly property var activePlayer: {
@@ -78,6 +79,7 @@ Pill {
             font.weight: Font.Medium
             color: Theme.text
             elide: Text.ElideRight
+            Layout.preferredWidth: Math.min(implicitWidth, 180)
             Layout.maximumWidth: 180
         }
 

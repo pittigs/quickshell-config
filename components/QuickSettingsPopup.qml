@@ -27,6 +27,34 @@ PopupWindow {
     property bool nightLightActive: false
     property bool dndActive: false
 
+    onVisibleChanged: {
+        if (visible && !queryStateProc.running) {
+            queryStateProc.running = true;
+        }
+    }
+
+    Process {
+        id: queryStateProc
+        command: [
+            "sh", "-c",
+            "nl=$(qdbus org.kde.KWin.NightLight /org/kde/KWin/NightLight org.kde.KWin.NightLight.running 2>/dev/null || echo false); " +
+            "dnd=$(kreadconfig6 --file plasmanotifyrc --group DoNotDisturb --key notificationSoundMuted 2>/dev/null || echo false); " +
+            "echo \"$nl|$dnd\""
+        ]
+        running: true
+
+        stdout: StdioCollector {
+            onTextChanged: {
+                if (!text || text.trim().length === 0) return;
+                const parts = text.trim().split("|");
+                if (parts.length >= 2) {
+                    popup.nightLightActive = (parts[0].trim() === "true");
+                    popup.dndActive = (parts[1].trim() === "true");
+                }
+            }
+        }
+    }
+
     Process {
         id: execProc
         command: ["sh", "-c", "true"]

@@ -72,9 +72,13 @@ PopupWindow {
         const daysInPrevMonth = new Date(displayYear, displayMonth, 0).getDate();
 
         const cells = [];
+        const prevM = displayMonth === 0 ? 11 : displayMonth - 1;
+        const prevY = displayMonth === 0 ? displayYear - 1 : displayYear;
         for (let i = startDay - 1; i >= 0; i--) {
             cells.push({
                 day: daysInPrevMonth - i,
+                month: prevM,
+                year: prevY,
                 isCurrentMonth: false,
                 isToday: false
             });
@@ -87,15 +91,21 @@ PopupWindow {
             );
             cells.push({
                 day: i,
+                month: displayMonth,
+                year: displayYear,
                 isCurrentMonth: true,
                 isToday: isToday
             });
         }
+        const nextM = displayMonth === 11 ? 0 : displayMonth + 1;
+        const nextY = displayMonth === 11 ? displayYear + 1 : displayYear;
         const totalNeeded = cells.length > 35 ? 42 : 35;
         const remaining = totalNeeded - cells.length;
         for (let i = 1; i <= remaining; i++) {
             cells.push({
                 day: i,
+                month: nextM,
+                year: nextY,
                 isCurrentMonth: false,
                 isToday: false
             });
@@ -684,10 +694,9 @@ PopupWindow {
 
                             readonly property bool isSelected: Boolean(
                                 popup.selectedDate &&
-                                modelData.isCurrentMonth &&
                                 popup.selectedDate.getDate() === modelData.day &&
-                                popup.selectedDate.getMonth() === popup.displayMonth &&
-                                popup.selectedDate.getFullYear() === popup.displayYear
+                                popup.selectedDate.getMonth() === modelData.month &&
+                                popup.selectedDate.getFullYear() === modelData.year
                             )
 
                             Layout.fillWidth: true
@@ -724,9 +733,11 @@ PopupWindow {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (modelData.isCurrentMonth) {
-                                        popup.selectedDate = new Date(popup.displayYear, popup.displayMonth, modelData.day);
+                                    if (!modelData.isCurrentMonth) {
+                                        popup.displayMonth = modelData.month;
+                                        popup.displayYear = modelData.year;
                                     }
+                                    popup.selectedDate = new Date(modelData.year, modelData.month, modelData.day);
                                 }
                             }
                         }

@@ -106,7 +106,19 @@ QtObject {
                     }
                 } catch (e) {
                     console.log("Weather JSON parse error:", e);
+                    if (!root.isLoaded) {
+                        root.description = "Dienst nicht erreichbar";
+                        root.conditionIcon = "󰖪";
+                    }
                 }
+            }
+        }
+
+        onExited: (exitCode) => {
+            if (exitCode !== 0 && !root.isLoaded) {
+                root.description = "Offline / Kein Wetter";
+                root.conditionIcon = "󰖪";
+                root.temp = "--";
             }
         }
     }
@@ -117,7 +129,15 @@ QtObject {
         }
     }
 
-    // Refresh every 20 minutes (1200000 ms)
+    // Fast retry (30s) if offline or failed on boot
+    property var retryTimer: Timer {
+        interval: 30000
+        running: !root.isLoaded
+        repeat: true
+        onTriggered: root.refresh()
+    }
+
+    // Refresh every 20 minutes (1200000 ms) when loaded
     property var pollTimer: Timer {
         interval: 1200000
         running: true

@@ -29,6 +29,14 @@ QtObject {
     property real _lastIdle: 0
     property real _lastTotal: 0
 
+    // Dynamic polling mode: 1.5s when active/popup open, 5s when idle on desktop
+    property bool fastPolling: false
+    onFastPollingChanged: {
+        if (fastPolling && !sysProc.running) {
+            sysProc.running = true;
+        }
+    }
+
     // Hardware Telemetry Polling Process
     property var proc: Process {
         id: sysProc
@@ -37,12 +45,17 @@ QtObject {
             "read -r cpu u n s i w irq sirq st g gn < /proc/stat; " +
             "cpu_stat=\"$((i + w)):$((u + n + s + i + w + irq + sirq + st))\"; " +
             "cpu_temp=\"\"; " +
-            "for h in /sys/class/hwmon/hwmon*; do " +
-            "  if [ -f \"$h/name\" ] && [ \"$(cat \"$h/name\" 2>/dev/null)\" = \"coretemp\" ]; then " +
-            "    t=$(cat \"$h/temp1_input\" 2>/dev/null); " +
-            "    if [ -n \"$t\" ]; then cpu_temp=\"$(( t / 1000 ))°C\"; break; fi; " +
-            "  fi; " +
-            "done; " +
+            "if [ -f /sys/class/hwmon/hwmon5/temp1_input ] && [ \"$(cat /sys/class/hwmon/hwmon5/name 2>/dev/null)\" = \"coretemp\" ]; then " +
+            "  t=$(cat /sys/class/hwmon/hwmon5/temp1_input 2>/dev/null); " +
+            "  if [ -n \"$t\" ]; then cpu_temp=\"$(( t / 1000 ))°C\"; fi; " +
+            "else " +
+            "  for h in /sys/class/hwmon/hwmon*; do " +
+            "    if [ -f \"$h/name\" ] && [ \"$(cat \"$h/name\" 2>/dev/null)\" = \"coretemp\" ]; then " +
+            "      t=$(cat \"$h/temp1_input\" 2>/dev/null); " +
+            "      if [ -n \"$t\" ]; then cpu_temp=\"$(( t / 1000 ))°C\"; break; fi; " +
+            "    fi; " +
+            "  done; " +
+            "fi; " +
             "ram_info=$(free -m | awk '/Mem:/ { printf(\"%d:%d:%d\", ($3/$2)*100, $3, $2) }'); " +
             "gpu_info=$(nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw --format=csv,noheader,nounits 2>/dev/null || echo '0,0,0,0,0'); " +
             "echo \"$cpu_stat|$cpu_temp|$ram_info|$gpu_info\""
@@ -114,9 +127,9 @@ QtObject {
         }
     }
 
-    // Refresh every 3 seconds centrally
+    // Refresh dynamically (1.5s when popup open, 5s on idle desktop)
     property var pollTimer: Timer {
-        interval: 3000
+        interval: root.fastPolling ? 1500 : 5000
         running: true
         repeat: true
         onTriggered: {

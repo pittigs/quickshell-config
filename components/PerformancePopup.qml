@@ -40,6 +40,10 @@ PopupWindow {
     implicitWidth: 350
     implicitHeight: mainCard.implicitHeight
 
+    onVisibleChanged: {
+        SysInfoService.fastPolling = visible;
+    }
+
     Process {
         id: sysMonProc
         command: ["plasma-systemmonitor"]
