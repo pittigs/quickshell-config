@@ -3,3 +3,5 @@ singleton PowerProfileService 1.0 PowerProfileService.qml
 singleton SysInfoService 1.0 SysInfoService.qml
 singleton NetworkService 1.0 NetworkService.qml
 singleton WeatherService 1.0 WeatherService.qml
+singleton WorkspaceService 1.0 WorkspaceService.qml
+

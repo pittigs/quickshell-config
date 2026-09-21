@@ -123,6 +123,19 @@ PopupWindow {
         return list;
     }
 
+    // Filter active application streams (per-app volume)
+    readonly property var appStreams: {
+        const list = [];
+        const nodes = Pipewire.nodes.values;
+        for (let i = 0; i < nodes.length; i++) {
+            const n = nodes[i];
+            if (n.isStream && n.audio && n.name) {
+                list.push(n);
+            }
+        }
+        return list;
+    }
+
     function getDeviceIcon(desc, isSink) {
         const d = (desc || "").toLowerCase();
         if (!isSink) {
@@ -168,6 +181,12 @@ PopupWindow {
         color: "#f21e1e2e"
         border.color: Theme.glassBorder
         border.width: 1
+
+        // Scale & Opacity smooth entrance animation
+        scale: popup.visible ? 1.0 : 0.95
+        opacity: popup.visible ? 1.0 : 0.0
+        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
 
         // Drop shadow subtle inset border
         Rectangle {
@@ -726,6 +745,131 @@ PopupWindow {
                     }
                 }
             }
+
+            // Per-App Streams Section (Application Volume Mixer)
+            ColumnLayout {
+                visible: popup.appStreams.length > 0
+                Layout.fillWidth: true
+                spacing: 8
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                    color: Theme.surface0
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+
+                    Text {
+                        text: "󰝚"
+                        font.family: Theme.iconFontFamily
+                        font.pixelSize: 13
+                        color: Theme.peach
+                    }
+
+                    Text {
+                        text: "Anwendungen"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                        color: Theme.text
+                    }
+                }
+
+                Repeater {
+                    model: popup.appStreams
+
+                    delegate: Rectangle {
+                        id: streamItem
+                        required property var modelData
+
+                        Layout.fillWidth: true
+                        implicitHeight: 40
+                        radius: 8
+                        color: Theme.surface0
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+                            spacing: 8
+
+                            // Mute toggle
+                            Text {
+                                text: streamItem.modelData.audio.muted ? "󰝟" : "󰕾"
+                                font.family: Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: streamItem.modelData.audio.muted ? Theme.red : Theme.peach
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: streamItem.modelData.audio.muted = !streamItem.modelData.audio.muted
+                                }
+                            }
+
+                            // App Name
+                            Text {
+                                text: streamItem.modelData.name || "App"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                font.weight: Font.Medium
+                                color: streamItem.modelData.audio.muted ? Theme.overlay : Theme.text
+                                elide: Text.ElideRight
+                                Layout.preferredWidth: 80
+                            }
+
+                            // Volume Slider
+                            Item {
+                                Layout.fillWidth: true
+                                implicitHeight: 14
+
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    height: 4
+                                    radius: 2
+                                    color: Theme.surface1
+
+                                    Rectangle {
+                                        height: parent.height
+                                        radius: parent.radius
+                                        color: Theme.peach
+                                        width: Math.max(2, parent.width * Math.min(1.0, Math.max(0.0, streamItem.modelData.audio.volume)))
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: (mouse) => {
+                                        streamItem.modelData.audio.volume = Math.max(0.0, Math.min(1.5, mouse.x / width));
+                                    }
+                                    onPositionChanged: (mouse) => {
+                                        if (pressed) {
+                                            streamItem.modelData.audio.volume = Math.max(0.0, Math.min(1.5, mouse.x / width));
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Volume Pct
+                            Text {
+                                text: Math.round(streamItem.modelData.audio.volume * 100) + "%"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                color: Theme.subtext
+                                Layout.preferredWidth: 30
+                                horizontalAlignment: Text.AlignRight
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
+

@@ -19,3 +19,6 @@ QuickSettingsPopup 1.0 QuickSettingsPopup.qml
 QuickSettingsWidget 1.0 QuickSettingsWidget.qml
 NotesPopup 1.0 NotesPopup.qml
 NotesWidget 1.0 NotesWidget.qml
+WorkspaceWidget 1.0 WorkspaceWidget.qml
+ActiveWindowWidget 1.0 ActiveWindowWidget.qml
+MediaPopup 1.0 MediaPopup.qml

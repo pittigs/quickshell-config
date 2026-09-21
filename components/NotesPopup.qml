@@ -95,6 +95,12 @@ PopupWindow {
         border.width: 1
         clip: true
 
+        // Scale & Opacity smooth entrance animation
+        scale: popup.visible ? 1.0 : 0.95
+        opacity: popup.visible ? 1.0 : 0.0
+        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+
         // Inner rim highlight
         Rectangle {
             anchors.fill: parent

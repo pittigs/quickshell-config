@@ -55,7 +55,7 @@ ShellRoot {
                         anchors.margins: 1
                     }
 
-                    // Left Section: App Launcher, Power & System Stats (CPU, RAM, RTX 5080)
+                    // Left Section: App Launcher, Workspaces, Active Window, Power & System Stats
                     RowLayout {
                         anchors.left: parent.left
                         anchors.leftMargin: 8
@@ -63,6 +63,8 @@ ShellRoot {
                         spacing: 8
 
                         LauncherButton {}
+                        WorkspaceWidget {}
+                        ActiveWindowWidget {}
                         PowerButton { parentWindow: barWindow }
                         SysInfoWidget { parentWindow: barWindow }
                     }
@@ -83,7 +85,7 @@ ShellRoot {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8
 
-                        MediaWidget {}
+                        MediaWidget { parentWindow: barWindow }
                         NotesWidget { parentWindow: barWindow }
                         QuickSettingsWidget { parentWindow: barWindow }
                         NetworkWidget { parentWindow: barWindow }

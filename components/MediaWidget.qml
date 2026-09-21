@@ -6,10 +6,42 @@ import "../theme"
 Pill {
     id: root
 
+    property var parentWindow: null
+
+    clickable: true
     implicitHeight: 34
     implicitWidth: layout.implicitWidth + 20
     visible: root.hasMedia
+    active: mediaPopup.visible
     customBorder: root.isPlaying ? Theme.surface2 : Theme.glassBorder
+
+    MediaPopup {
+        id: mediaPopup
+        anchorItem: root
+        anchorWindow: root.parentWindow
+    }
+
+    onClicked: {
+        mediaPopup.visible = !mediaPopup.visible;
+    }
+
+    onMiddleClicked: {
+        if (root.hasMedia && root.activePlayer && root.activePlayer.canTogglePlaying) {
+            root.activePlayer.togglePlaying();
+        }
+    }
+
+    onWheelUp: {
+        if (root.hasMedia && root.activePlayer && root.activePlayer.volumeSupported) {
+            root.activePlayer.volume = Math.min(1.0, root.activePlayer.volume + 0.05);
+        }
+    }
+
+    onWheelDown: {
+        if (root.hasMedia && root.activePlayer && root.activePlayer.volumeSupported) {
+            root.activePlayer.volume = Math.max(0.0, root.activePlayer.volume - 0.05);
+        }
+    }
 
     // Pick active player (playing first, otherwise first available with valid track title)
     readonly property var activePlayer: {
