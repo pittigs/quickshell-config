@@ -96,6 +96,7 @@ QtObject {
     }
 
     function triggerAlert(title, message) {
+        if (alertProcess.running) alertProcess.running = false;
         const safeTitle = title.replace(/'/g, "");
         const safeMsg = message.replace(/'/g, "");
         const cmd = "notify-send -a 'Pomodoro' -i 'alarm-symbolic' '" + safeTitle + "' '" + safeMsg + "'; " +
@@ -106,8 +107,10 @@ QtObject {
 
     function finishSession(isNaturalFinish) {
         if (currentMode === modeFocus) {
-            completedPomodoros++;
-            const isLongBreak = (completedPomodoros % 4 === 0);
+            if (isNaturalFinish) {
+                completedPomodoros++;
+            }
+            const isLongBreak = (completedPomodoros > 0 && completedPomodoros % 4 === 0);
             const nextMode = isLongBreak ? modeLongBreak : modeShortBreak;
             if (isNaturalFinish) {
                 triggerAlert(

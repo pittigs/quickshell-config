@@ -48,6 +48,7 @@ Pill {
             color: "transparent"
 
             IconImage {
+                id: appIcon
                 anchors.centerIn: parent
                 width: 16
                 height: 16
@@ -56,7 +57,7 @@ Pill {
             }
 
             Text {
-                visible: !parent.children[0].visible
+                visible: !appIcon.visible
                 anchors.centerIn: parent
                 text: "󰖲"
                 font.family: Theme.iconFontFamily

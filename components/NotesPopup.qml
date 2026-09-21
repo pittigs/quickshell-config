@@ -43,6 +43,10 @@ PopupWindow {
                 }
             }
         }
+
+        onExited: (exitCode) => {
+            popup.isLoaded = true;
+        }
     }
 
     Process {
@@ -52,6 +56,7 @@ PopupWindow {
 
     function saveNotes() {
         if (!popup.isLoaded) return;
+        if (saveProc.running) saveProc.running = false;
         const b64 = Qt.btoa(encodeURIComponent(noteArea.text));
         saveProc.command = [
             "python3", "-c",

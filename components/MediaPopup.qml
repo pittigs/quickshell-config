@@ -230,9 +230,11 @@ PopupWindow {
                             radius: parent.radius
                             color: Theme.mauve
                             width: {
-                                if (!popup.activePlayer || !popup.activePlayer.length) return 0;
-                                const frac = Math.min(1.0, Math.max(0.0, popup.activePlayer.position / popup.activePlayer.length));
-                                return parent.width * frac;
+                                if (!popup.activePlayer || !popup.activePlayer.length || popup.activePlayer.length <= 0) return 0;
+                                const pos = popup.activePlayer.position || 0;
+                                const len = popup.activePlayer.length || 1;
+                                const frac = Math.min(1.0, Math.max(0.0, pos / len));
+                                return Number.isFinite(frac) ? parent.width * frac : 0;
                             }
                         }
                     }
@@ -366,7 +368,7 @@ PopupWindow {
 
             // Multiple players switcher (if > 1)
             RowLayout {
-                visible: popup.players.length > 1
+                visible: Boolean(popup.players && popup.players.length > 1)
                 Layout.fillWidth: true
                 spacing: 6
 

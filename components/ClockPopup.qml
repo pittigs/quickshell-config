@@ -25,8 +25,14 @@ PopupWindow {
     implicitWidth: 350
     implicitHeight: mainCard.implicitHeight
 
+    onVisibleChanged: {
+        if (visible) {
+            popup.resetToToday();
+        }
+    }
+
     // Active Tab: 0 = Pomodoro, 1 = Kalender
-    property int activeTab: 0
+    property int activeTab: 1
 
     // Calendar state
     property var today: new Date()
@@ -99,7 +105,7 @@ PopupWindow {
         }
         const nextM = displayMonth === 11 ? 0 : displayMonth + 1;
         const nextY = displayMonth === 11 ? displayYear + 1 : displayYear;
-        const totalNeeded = cells.length > 35 ? 42 : 35;
+        const totalNeeded = 42;
         const remaining = totalNeeded - cells.length;
         for (let i = 1; i <= remaining; i++) {
             cells.push({
@@ -273,13 +279,17 @@ PopupWindow {
                 }
             }
 
-            // ==========================================
-            // TAB 0: POMODORO TIMER VIEW
-            // ==========================================
-            ColumnLayout {
+            StackLayout {
+                id: tabStack
                 Layout.fillWidth: true
-                visible: popup.activeTab === 0
-                spacing: 12
+                currentIndex: popup.activeTab
+
+                // ==========================================
+                // TAB 0: POMODORO TIMER VIEW
+                // ==========================================
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 12
 
                 // Mode Selector Bar (Fokus, Pause, Lang)
                 RowLayout {
@@ -561,6 +571,45 @@ PopupWindow {
                         }
                     }
                 }
+
+                // Motivational / Mode Tip Card
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 34
+                    radius: 8
+                    color: Theme.surface0
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        spacing: 8
+
+                        Text {
+                            text: "󰌵"
+                            font.family: Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: Theme.peach
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: PomodoroService.currentMode === PomodoroService.modeFocus
+                                ? "Bleib fokussiert – keine Ablenkungen!"
+                                : (PomodoroService.currentMode === PomodoroService.modeLongBreak
+                                    ? "Große Pause! Geh kurz an die frische Luft."
+                                    : "Kurz durchatmen, trinken, kurz strecken.")
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 11
+                            color: Theme.subtext
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillHeight: true
+                }
             }
 
             // ==========================================
@@ -568,7 +617,6 @@ PopupWindow {
             // ==========================================
             ColumnLayout {
                 Layout.fillWidth: true
-                visible: popup.activeTab === 1
                 spacing: 10
 
                 // Month Navigation Header
@@ -780,4 +828,5 @@ PopupWindow {
             }
         }
     }
+}
 }

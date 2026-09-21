@@ -31,8 +31,19 @@ Pill {
         }
     }
 
+    function openOrSwitch(tabIndex) {
+        if (!clockPopup.visible) {
+            clockPopup.activeTab = tabIndex;
+            clockPopup.visible = true;
+        } else if (clockPopup.activeTab === tabIndex) {
+            clockPopup.visible = false;
+        } else {
+            clockPopup.activeTab = tabIndex;
+        }
+    }
+
     onClicked: {
-        clockPopup.visible = !clockPopup.visible;
+        root.openOrSwitch(PomodoroService.isRunning ? 0 : 1);
     }
 
     onRightClicked: {
@@ -49,96 +60,150 @@ Pill {
         spacing: 7
 
         // Pomodoro Active Badge (shown when Pomodoro is running or active)
-        RowLayout {
+        Item {
+            id: pomodoroBadge
             visible: PomodoroService.isRunning || PomodoroService.timeRemaining !== PomodoroService.getDurationForMode(PomodoroService.currentMode)
-            spacing: 5
+            implicitWidth: pomodoroRow.implicitWidth
+            implicitHeight: pomodoroRow.implicitHeight
 
-            Rectangle {
-                implicitWidth: 6
-                implicitHeight: 6
-                radius: 3
-                color: PomodoroService.modeColor
-                visible: PomodoroService.isRunning
+            RowLayout {
+                id: pomodoroRow
+                anchors.fill: parent
+                spacing: 5
 
-                SequentialAnimation on opacity {
-                    running: PomodoroService.isRunning
-                    loops: Animation.Infinite
-                    PropertyAnimation { to: 0.2; duration: 800; easing.type: Easing.InOutQuad }
-                    PropertyAnimation { to: 1.0; duration: 800; easing.type: Easing.InOutQuad }
+                Rectangle {
+                    implicitWidth: 6
+                    implicitHeight: 6
+                    radius: 3
+                    color: PomodoroService.modeColor
+                    visible: PomodoroService.isRunning
+
+                    SequentialAnimation on opacity {
+                        running: PomodoroService.isRunning
+                        loops: Animation.Infinite
+                        PropertyAnimation { to: 0.2; duration: 800; easing.type: Easing.InOutQuad }
+                        PropertyAnimation { to: 1.0; duration: 800; easing.type: Easing.InOutQuad }
+                    }
+                }
+
+                Text {
+                    text: PomodoroService.modeIcon
+                    font.family: Theme.iconFontFamily
+                    font.pixelSize: 13
+                    color: PomodoroService.modeColor
+                }
+
+                Text {
+                    text: PomodoroService.formattedTime
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
+                    font.weight: Font.Bold
+                    color: PomodoroService.modeColor
+                }
+
+                Rectangle {
+                    implicitWidth: 1
+                    implicitHeight: 12
+                    color: Theme.surface1
+                    Layout.leftMargin: 2
                 }
             }
 
-            Text {
-                text: PomodoroService.modeIcon
-                font.family: Theme.iconFontFamily
-                font.pixelSize: 13
-                color: PomodoroService.modeColor
-            }
-
-            Text {
-                text: PomodoroService.formattedTime
-                font.family: Theme.fontFamily
-                font.pixelSize: 12
-                font.weight: Font.Bold
-                color: PomodoroService.modeColor
-            }
-
-            Rectangle {
-                implicitWidth: 1
-                implicitHeight: 12
-                color: Theme.surface1
-                Layout.leftMargin: 2
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.RightButton) {
+                        PomodoroService.toggle();
+                    } else {
+                        root.openOrSwitch(0);
+                    }
+                }
             }
         }
 
-        // Calendar Icon
-        Text {
-            text: "󰃭"
-            font.family: Theme.iconFontFamily
-            font.pixelSize: 13
-            color: root.hovered || root.active ? Theme.mauve : Theme.blue
+        // Calendar & Clock Section
+        Item {
+            id: calendarClockSection
+            implicitWidth: calClockRow.implicitWidth
+            implicitHeight: calClockRow.implicitHeight
 
-            Behavior on color {
-                ColorAnimation { duration: 150 }
+            RowLayout {
+                id: calClockRow
+                anchors.fill: parent
+                spacing: 7
+
+                // Calendar Icon
+                Text {
+                    text: "󰃭"
+                    font.family: Theme.iconFontFamily
+                    font.pixelSize: 13
+                    color: (clockPopup.visible && clockPopup.activeTab === 1) || root.hovered ? Theme.mauve : Theme.blue
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
+                }
+
+                // Date Display
+                Text {
+                    text: Qt.formatDateTime(root.currentTime, "ddd, dd. MMM")
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 12
+                    font.weight: Font.Medium
+                    color: Theme.subtext
+                }
+
+                // Divider
+                Rectangle {
+                    implicitWidth: 1
+                    implicitHeight: 12
+                    color: Theme.surface1
+                }
+
+                // Clock Display
+                Text {
+                    text: root.showDetails 
+                        ? Qt.formatDateTime(root.currentTime, "HH:mm:ss")
+                        : Qt.formatDateTime(root.currentTime, "HH:mm")
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 13
+                    font.weight: Font.Bold
+                    color: Theme.text
+                }
+
+                // Subtle Dropdown Indicator
+                Text {
+                    text: "󰅀"
+                    font.family: Theme.iconFontFamily
+                    font.pixelSize: 11
+                    color: root.active ? Theme.blue : Theme.overlay
+                    rotation: root.active ? 180 : 0
+
+                    Behavior on rotation {
+                        NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+                    }
+
+                    Behavior on color {
+                        ColorAnimation { duration: 150 }
+                    }
+                }
             }
-        }
 
-        // Date Display
-        Text {
-            text: Qt.formatDateTime(root.currentTime, "ddd, dd. MMM")
-            font.family: Theme.fontFamily
-            font.pixelSize: 12
-            font.weight: Font.Medium
-            color: Theme.subtext
-        }
-
-        // Divider
-        Rectangle {
-            implicitWidth: 1
-            implicitHeight: 12
-            color: Theme.surface1
-        }
-
-        // Clock Display
-        Text {
-            text: root.showDetails 
-                ? Qt.formatDateTime(root.currentTime, "HH:mm:ss")
-                : Qt.formatDateTime(root.currentTime, "HH:mm")
-            font.family: Theme.fontFamily
-            font.pixelSize: 13
-            font.weight: Font.Bold
-            color: Theme.text
-        }
-
-        // Subtle Dropdown Indicator
-        Text {
-            text: "󰅀"
-            font.family: Theme.iconFontFamily
-            font.pixelSize: 11
-            color: root.active ? Theme.blue : Theme.overlay
-
-            Behavior on color {
-                ColorAnimation { duration: 150 }
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.RightButton) {
+                        PomodoroService.toggle();
+                    } else if (mouse.button === Qt.MiddleButton) {
+                        root.showDetails = !root.showDetails;
+                    } else {
+                        root.openOrSwitch(1);
+                    }
+                }
             }
         }
     }

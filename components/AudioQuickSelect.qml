@@ -31,20 +31,25 @@ PopupWindow {
     }
 
     Process {
-        id: wpctlProc
+        id: wpctlSinkProc
+        command: ["wpctl", "set-default", "0"]
+    }
+
+    Process {
+        id: wpctlSourceProc
         command: ["wpctl", "set-default", "0"]
     }
 
     function setDefaultSink(id) {
-        if (wpctlProc.running) wpctlProc.running = false;
-        wpctlProc.command = ["wpctl", "set-default", String(id)];
-        wpctlProc.running = true;
+        if (wpctlSinkProc.running) wpctlSinkProc.running = false;
+        wpctlSinkProc.command = ["wpctl", "set-default", String(id)];
+        wpctlSinkProc.running = true;
     }
 
     function setDefaultSource(id) {
-        if (wpctlProc.running) wpctlProc.running = false;
-        wpctlProc.command = ["wpctl", "set-default", String(id)];
-        wpctlProc.running = true;
+        if (wpctlSourceProc.running) wpctlSourceProc.running = false;
+        wpctlSourceProc.command = ["wpctl", "set-default", String(id)];
+        wpctlSourceProc.running = true;
     }
 
     function applyPreset(presetName) {
@@ -798,25 +803,31 @@ PopupWindow {
 
                             // Mute toggle
                             Text {
-                                text: streamItem.modelData.audio.muted ? "󰝟" : "󰕾"
+                                readonly property bool isStreamMuted: Boolean(streamItem.modelData && streamItem.modelData.audio && streamItem.modelData.audio.muted)
+                                text: isStreamMuted ? "󰝟" : "󰕾"
                                 font.family: Theme.iconFontFamily
                                 font.pixelSize: 14
-                                color: streamItem.modelData.audio.muted ? Theme.red : Theme.peach
+                                color: isStreamMuted ? Theme.red : Theme.peach
 
                                 MouseArea {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: streamItem.modelData.audio.muted = !streamItem.modelData.audio.muted
+                                    onClicked: {
+                                        if (streamItem.modelData && streamItem.modelData.audio) {
+                                            streamItem.modelData.audio.muted = !streamItem.modelData.audio.muted;
+                                        }
+                                    }
                                 }
                             }
 
                             // App Name
                             Text {
-                                text: streamItem.modelData.name || "App"
+                                readonly property bool isStreamMuted: Boolean(streamItem.modelData && streamItem.modelData.audio && streamItem.modelData.audio.muted)
+                                text: (streamItem.modelData && streamItem.modelData.name) ? streamItem.modelData.name : "App"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
                                 font.weight: Font.Medium
-                                color: streamItem.modelData.audio.muted ? Theme.overlay : Theme.text
+                                color: isStreamMuted ? Theme.overlay : Theme.text
                                 elide: Text.ElideRight
                                 Layout.preferredWidth: 80
                             }
@@ -838,7 +849,10 @@ PopupWindow {
                                         height: parent.height
                                         radius: parent.radius
                                         color: Theme.peach
-                                        width: Math.max(2, parent.width * Math.min(1.0, Math.max(0.0, streamItem.modelData.audio.volume)))
+                                        width: {
+                                            const vol = (streamItem.modelData && streamItem.modelData.audio) ? streamItem.modelData.audio.volume : 0;
+                                            return Math.max(2, parent.width * Math.min(1.0, Math.max(0.0, vol)));
+                                        }
                                     }
                                 }
 
@@ -846,10 +860,12 @@ PopupWindow {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: (mouse) => {
-                                        streamItem.modelData.audio.volume = Math.max(0.0, Math.min(1.5, mouse.x / width));
+                                        if (streamItem.modelData && streamItem.modelData.audio) {
+                                            streamItem.modelData.audio.volume = Math.max(0.0, Math.min(1.5, mouse.x / width));
+                                        }
                                     }
                                     onPositionChanged: (mouse) => {
-                                        if (pressed) {
+                                        if (pressed && streamItem.modelData && streamItem.modelData.audio) {
                                             streamItem.modelData.audio.volume = Math.max(0.0, Math.min(1.5, mouse.x / width));
                                         }
                                     }
@@ -858,7 +874,10 @@ PopupWindow {
 
                             // Volume Pct
                             Text {
-                                text: Math.round(streamItem.modelData.audio.volume * 100) + "%"
+                                text: {
+                                    const vol = (streamItem.modelData && streamItem.modelData.audio) ? streamItem.modelData.audio.volume : 0;
+                                    return Math.round(vol * 100) + "%";
+                                }
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 10
                                 color: Theme.subtext

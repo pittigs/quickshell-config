@@ -32,8 +32,8 @@ Pill {
     readonly property bool hasGpu: SysInfoService.hasGpu
 
     readonly property var battery: UPower.displayDevice
-    readonly property bool hasBattery: Boolean(battery && battery.isRechargeable)
-    readonly property int batteryPercent: hasBattery ? Math.round(battery.percentage * 100) : 0
+    readonly property bool hasBattery: Boolean(battery && (battery.isLaptopBattery || battery.isPresent) && battery.type === UPowerDeviceType.Battery)
+    readonly property int batteryPercent: hasBattery ? Math.round(battery.percentage <= 1.0 ? battery.percentage * 100 : battery.percentage) : 0
     readonly property bool isCharging: hasBattery ? (battery.state === UPowerDeviceState.Charging || battery.state === UPowerDeviceState.PendingCharge) : false
 
     readonly property string batteryIcon: {

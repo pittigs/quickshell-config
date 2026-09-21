@@ -95,11 +95,20 @@ PopupWindow {
         runCmd(cmd);
     }
 
+    Timer {
+        id: brightnessDebounceTimer
+        interval: 60
+        repeat: false
+        onTriggered: {
+            const raw = Math.round((popup.brightnessPercent / 100) * popup.brightnessMaxVal);
+            popup.runCmd("qdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement/Actions/BrightnessControl org.kde.Solid.PowerManagement.Actions.BrightnessControl.setBrightnessSilent " + raw);
+        }
+    }
+
     function setBrightness(pct) {
         pct = Math.max(5, Math.min(100, pct));
         popup.brightnessPercent = pct;
-        const raw = Math.round((pct / 100) * popup.brightnessMaxVal);
-        runCmd("qdbus org.kde.Solid.PowerManagement /org/kde/Solid/PowerManagement/Actions/BrightnessControl org.kde.Solid.PowerManagement.Actions.BrightnessControl.setBrightnessSilent " + raw);
+        brightnessDebounceTimer.restart();
     }
 
     function takeScreenshot(mode) {

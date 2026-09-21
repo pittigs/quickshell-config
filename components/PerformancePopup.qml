@@ -51,7 +51,7 @@ PopupWindow {
 
     function openSystemMonitor() {
         popup.visible = false;
-        sysMonProc.running = true;
+        sysMonProc.startDetached();
     }
 
     Rectangle {
