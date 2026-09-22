@@ -35,6 +35,13 @@ PopupWindow {
     Process {
         id: execProc
         command: ["sh", "-c", "true"]
+        stderr: StdioCollector {
+            onTextChanged: {
+                if (text && text.trim().length > 0) {
+                    console.warn("[PowerMenu] Error:", text.trim());
+                }
+            }
+        }
     }
 
     function runCommand(cmd) {
@@ -203,9 +210,9 @@ PopupWindow {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (popup.confirmingAction === "shutdown") {
-                                    popup.runCommand("qdbus org.kde.Shutdown /Shutdown logoutAndShutdown || systemctl poweroff");
+                                    popup.runCommand("systemctl poweroff || loginctl poweroff || poweroff");
                                 } else {
-                                    popup.runCommand("qdbus org.kde.Shutdown /Shutdown logoutAndReboot || systemctl reboot");
+                                    popup.runCommand("systemctl reboot || loginctl reboot || reboot");
                                 }
                             }
                         }
@@ -561,7 +568,7 @@ PopupWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: popup.runCommand("qdbus org.kde.Shutdown /Shutdown logout")
+                        onClicked: popup.runCommand("qdbus-qt6 org.kde.Shutdown /Shutdown org.kde.Shutdown.logout 2>/dev/null || loginctl terminate-session ${XDG_SESSION_ID:-self} || loginctl terminate-user $USER")
                     }
                 }
 
@@ -603,7 +610,7 @@ PopupWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: popup.runCommand("qdbus org.kde.LogoutPrompt /LogoutPrompt promptAll")
+                        onClicked: popup.runCommand("qdbus-qt6 org.kde.LogoutPrompt /LogoutPrompt promptAll 2>/dev/null || qdbus org.kde.LogoutPrompt /LogoutPrompt promptAll 2>/dev/null")
                     }
                 }
             }
